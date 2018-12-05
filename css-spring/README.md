@@ -31,7 +31,7 @@
 ### 工具函数分析
 
 #### parseDeclarations
-    在这个函数里调用css-tree库，parse转为ast树，返回其中的Declaration节点。
+在这个函数里调用css-tree库，parse转为ast树，返回其中的Declaration节点。
 
 #### getAnimationValues
 
