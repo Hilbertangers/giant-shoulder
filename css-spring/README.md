@@ -8,6 +8,7 @@
 ## main dependencies
 - css-tree
 - springer
+- lodash
 
 ## start
 项目思路，暴露spring函数给用户，生成一个类似如下的字符串。
@@ -34,4 +35,18 @@
 在这个函数里调用css-tree库，parse转为ast树，返回其中的Declaration节点。
 
 #### getAnimationValues
+寻找开始与结束两者都存在的Declaration节点
+1、将Declaration节点内的'property'(即css key)map出来作为数组，传给reduce作为数组参数，在构造一个函数作为reduce的函数参数；
+2、函数参数的作用：返回一个类似下面这种的对象；
+```
+{
+    border: {
+        start: [Declaration节点],
+        end: [Declaration节点]
+    }
+}
+```
+(其中主要借助了lodash的intersectionBy, map, reduce方法)
+
+#### sanitizeValues
 
