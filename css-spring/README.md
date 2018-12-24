@@ -37,6 +37,7 @@
 #### getAnimationValues
 寻找开始与结束两者都存在的Declaration节点
 1、将Declaration节点内的'property'(即css key)map出来作为数组，传给reduce作为数组参数，在构造一个函数作为reduce的函数参数；
+
 2、函数参数的作用：返回一个类似下面这种的对象；
 ```
 {
@@ -64,14 +65,21 @@
 
 #### getInterpolator
 参数：tension(张力值)、wobble(摇晃值)、steps(步骤数)；
+
 将tension和wobble传入springer模块，经插件处理生成spring函数（缓动函数easing，输入0~1的参数）；
+
 依据steps，返回对应类型的插值函数，类型是Declaration节点的属性：fixed（固定值）、number（数字），hex（颜色）；
-fixed：每一步的固定值都一样，如边框的'solid'属性，每一步都是相同的；
-number：数值则使用插值函数lerp, 将spring(i / steps)作为加速度传入，得到每一步的数值；
-hex：将颜色转换为rgb再进行插值运算，得到每一步的颜色；
+
+- fixed：每一步的固定值都一样，如边框的'solid'属性，每一步都是相同的；
+
+- number：数值则使用插值函数lerp, 将spring(i / steps)作为加速度传入，得到每一步的数值；
+
+- hex：将颜色转换为rgb再进行插值运算，得到每一步的颜色；
 
 这里面有两个小技巧：
+
 1、需要对一个有长度的空数组进行map，可以这样写`[...Array(length)].map(fun)`，(可以用在react render渲染固定length列表);
+
 2、使用位运算去将16进制色值转为rgb，再转换回去
 ```
   const hex = parseInt(a.replace(/#/g, ''), 16)
@@ -79,5 +87,4 @@ hex：将颜色转换为rgb再进行插值运算，得到每一步的颜色；
     g = (hex >> 8) & 0xff,
     b = hex & 0xff
 ```
-
 tips:lerp线性插值原理自行google
