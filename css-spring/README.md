@@ -88,3 +88,6 @@
     b = hex & 0xff
 ```
 tips:lerp线性插值原理自行google
+
+#### addInterpolatedValues
+通过getInterpolator得出的插值函数和sanitizeValues得出的declarations，以及固定精度，将declarations里的value变成数组，内有0到100个具体值，这就是我们要的css keyframes。
