@@ -11,6 +11,7 @@
 - lodash
 
 ## start
+
 项目思路，暴露spring函数给用户，生成一个类似如下的字符串。
 ```
 /**
@@ -64,6 +65,7 @@
 ```
 
 #### getInterpolator
+
 参数：tension(张力值)、wobble(摇晃值)、steps(步骤数)；
 
 将tension和wobble传入springer模块，经插件处理生成spring函数（缓动函数easing，输入0~1的参数）；
@@ -90,4 +92,27 @@
 tips:lerp线性插值原理自行google
 
 #### addInterpolatedValues
+
 通过getInterpolator得出的插值函数和sanitizeValues得出的declarations，以及固定精度，将declarations里的value变成数组，内有0到100个具体值，这就是我们要的css keyframes。
+
+#### buildKeyframeObject
+
+参数1：addInterpolatedValues函数得到的从100个keyframse值 
+
+参数2：0%~100%的数组
+
+做几个for循环和switch组合成最后的css值，没什么特点。
+
+### webpack打包
+
+常规js文件打包。
+
+插件方面 lodash-webpack-plugin没见过，用于缩小lodash库体积。
+
+## End
+
+主要精华在getInterpolator工具函数中。
+
+是个精美的库，为作者点赞。
+
+2018 Happy End~
