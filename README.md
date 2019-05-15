@@ -12,3 +12,5 @@
 
 - [css-spring](https://github.com/Hilbertangers/giant-shoulder/tree/master/css-spring)
 
+- [Fuse](https://github.com/Hilbertangers/giant-shoulder/tree/master/fuse)
+
