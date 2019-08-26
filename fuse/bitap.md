@@ -76,16 +76,139 @@ let score = bitapScore(pattern, {
 
 得到currentThreshold值。
 
-​	2.初始化
+​	2.进入bitap查询。
+
+先*根据字符长度和location，distance，threshold三个字段判断做bitap查询的范围*
+
+```javascript
+  let binMin = 0
+    let binMid = binMax
+
+    while (binMin < binMid) {
+      const score = bitapScore(pattern, {
+        errors: i,
+        currentLocation: expectedLocation + binMid,
+        expectedLocation,
+        distance
+      })
+      // console.log("TCL: score", score)
+      // console.log("TCL: currentThreshold", currentThreshold)
+
+      if (score <= currentThreshold) {
+        binMin = binMid
+      } else {
+        binMax = binMid
+      }
+
+      binMid = Math.floor((binMax - binMin) / 2 + binMin)
+    }
+
+    // Use the result from this iteration as the maximum for the next.
+    binMax = binMid
+    console.log("TCL: binMid", binMid)
+    // 根据字符长度和location，distance，threshold三个字段判断做bitap查询的范围
+
+    let start = Math.max(1, expectedLocation - binMid + 1)
+    let finish = findAllMatches ? textLen : Math.min(expectedLocation + binMid, textLen) + patternLen
 
 ```
-lastBitArr:[];
-finalScore:number = 1;
-binMax = patternLen + textLen;
-mask = 1 << (patternLen - 1)
+
+得到start和finish,定义bitArr数组，并循环text。
+
+提前计算得到pattern的字母集
+
+比如这种场景时`pattern='ldman';text='oldmanb'`，得到字母集为`patternAlphabet = { l: 16, d: 8, m: 4, a: 2, n: 1 }`,准备工作做好之后进入字符匹配阶段。
+
+先贴代码
+
+```javascript
+    for (let j = finish; j >= start; j -= 1) {
+      let currentLocation = j - 1
+      let charMatch = patternAlphabet[text.charAt(currentLocation)]
+
+      // 是否匹配当前字符串
+      if (charMatch) {
+        matchMask[currentLocation] = 1
+      }
+      
+      console.log("TCL: charMatch", charMatch)
+      // First pass: exact match
+      // 是否连续匹配
+      bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch
+      console.log("TCL: bitArr", bitArr)
+
+      // Subsequent passes: fuzzy match
+      if (i !== 0) {
+        bitArr[j] |= (((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1) | lastBitArr[j + 1]
+        console.log("TCL: 2 bitArr", bitArr, j)
+        // console.log("TCL: lastBitArr[j + 1]", lastBitArr[j + 1])
+        console.log("TCL: lastBitArr[j]", lastBitArr[j])
+      }
+
+      if (bitArr[j] & mask) {
+        finalScore = bitapScore(pattern, {
+          errors: i,
+          currentLocation,
+          expectedLocation,
+          distance
+        })
+        console.log("TCL: finalScore", finalScore)
+
+        // This match will almost certainly be better than any existing match.
+        // But check anyway.
+        if (finalScore <= currentThreshold) {
+          // Indeed it is
+          currentThreshold = finalScore
+          bestLocation = currentLocation
+
+          // Already passed `loc`, downhill from here on in.
+          if (bestLocation <= expectedLocation) {
+            break
+          }
+
+          // When passing `bestLocation`, don't exceed our current distance from `expectedLocation`.
+          start = Math.max(1, 2 * expectedLocation - bestLocation)
+        }
+      }
+    }
 ```
 
 
 
+3.精准匹配
 
+定义掩码`mask=1 << (patternLen - 1)`,在这个例子里就是`1 << 4`.
+
+再通过`charMatch = patternAlphabet[text.charAt(currentLocation)]`得到text当前字符对应pattern的字母。
+
+*重点*：对bitArr[j]赋值：`bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch`
+
+这一步位运算可以得出pattern在text内是否连续匹配。
+
+如例子中的字符，
+
+text循环中最后一位b在patternAlphabet中不存在 => charMatch===undefined => 当前的bitArr[j] = 0;
+
+倒数第二位n在patternAlphabet中存在 => charMatch===1 => 当前的bitArr[j] = 1;
+
+倒数第三位a在patternAlphabet中存在 => charMatch===2 => 当前的bitArr[j] = 2;
+
+以此类推到倒数第六位l是 => charMatch === 16 => bitArr[j] = 16,此时是不是发现16 === 1<<4,也就是`bitArr[j] & mask`为true，精准匹配成功，计算出finalScore。
+
+*分析*：`bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch`
+
+bitArr数组定义时，给他的最后一个元素赋值0。每次求当前值就对前一个值，左移一位，再或上一个1，保证第一位是有值的，然后与上当前匹配值charMatch。这样的话若前一个值是不匹配的0，那当前值必须是pattern字符的最后一个字母，否则与上charMatch的结果也会是0。
+
+4.模糊匹配
+
+若精准匹配得到的finalScore小于既定的一个score，则进入pattern的下一次循环，此时进行精准匹配+模糊匹配
+
+```javascript
+      bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch
+
+      // Subsequent passes: fuzzy match
+      if (i !== 0) {
+        bitArr[j] |= (((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1) | lastBitArr[j + 1]
+      }
+```
 
